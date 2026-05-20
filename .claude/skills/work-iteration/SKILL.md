@@ -43,7 +43,10 @@ else
   git pull origin feature/<slug> 2>/dev/null || true  # may not exist on remote yet
 fi
 # Create sub-branch off feature
-git checkout -b feature/<slug>/<issue-identifier-lowercase>
+# Use a HYPHEN, not a slash, between <slug> and <issue-id>: git refs can't be both
+# a file and a directory at the same path. `feature/<slug>` as a branch blocks
+# `feature/<slug>/<issue-id>` from being created. Hyphen avoids the collision.
+git checkout -b feature/<slug>-<issue-identifier-lowercase>
 ```
 
 **Never branch directly off main for a sub-issue.** Always off the feature branch.
@@ -115,7 +118,7 @@ Reviewer prompt — adversarial framing:
 You are an adversarial code reviewer. Your job is to find problems, NOT to approve.
 
 === Scope of review ===
-Branch: feature/<slug>/<issue-identifier-lowercase>
+Branch: feature/<slug>-<issue-identifier-lowercase>
 Diff against: feature/<slug>
 Run: `git diff feature/<slug>...HEAD`
 
@@ -180,7 +183,7 @@ The conventional prefix follows the project's existing log style (run `git log -
 
 Push the sub-branch:
 ```bash
-git push -u origin feature/<slug>/<issue-identifier-lowercase>
+git push -u origin feature/<slug>-<issue-identifier-lowercase>
 ```
 
 Open a PR from the sub-branch into the **feature branch** (NOT main):
@@ -246,7 +249,7 @@ If any is missing, you cannot proceed to Step 8.
 
 ## Cross-session resumption
 
-If the user invokes this skill on a sub-issue that already has an open PR (check via `gh pr list --head feature/<slug>/<issue-identifier-lowercase>`), do NOT re-implement. Instead, report the PR status and ask whether they want to:
+If the user invokes this skill on a sub-issue that already has an open PR (check via `gh pr list --head feature/<slug>-<issue-identifier-lowercase>`), do NOT re-implement. Instead, report the PR status and ask whether they want to:
 - View the open PR
 - Pick a different sub-issue
 - Force-restart (delete branch + PR — confirm before doing this)
