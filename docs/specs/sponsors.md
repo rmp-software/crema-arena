@@ -1,6 +1,6 @@
 ---
 slug: sponsors
-status: planned
+status: in-progress
 created: 2026-05-20
 linear_project_id: aac21a02-f206-4d19-9284-e852b2c0b43c
 linear_parent_issue: RMP-106
