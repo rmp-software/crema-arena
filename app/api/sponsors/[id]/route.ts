@@ -146,6 +146,8 @@ export async function PATCH(
     const rawLogo = formData.get('logo');
     const logo = rawLogo instanceof File ? rawLogo : null;
     let newLogoUrl: string | null = null;
+    // Old blob to clean up after a successful DB update (set by replace OR remove).
+    let oldLogoUrlToDelete: string | null = null;
     if (logo && logo.size > 0) {
       const fileResult = await saveUploadedFile(logo, 'sponsors');
       if (!fileResult.success || !fileResult.url) {
@@ -156,6 +158,11 @@ export async function PATCH(
       }
       newLogoUrl = fileResult.url;
       data.logo_url = newLogoUrl;
+      oldLogoUrlToDelete = existing.logo_url;
+    } else if (formData.get('remove_logo') === '1') {
+      // No replacement file: clear the persisted logo and queue the old blob for cleanup.
+      data.logo_url = null;
+      oldLogoUrlToDelete = existing.logo_url;
     }
 
     let sponsor;
@@ -183,12 +190,13 @@ export async function PATCH(
       throw updateError;
     }
 
-    // DB update succeeded: now it's safe to delete the previous blob.
-    if (newLogoUrl && existing.logo_url) {
+    // DB update succeeded: now it's safe to delete the previous blob (set on either
+    // a replace — new file uploaded — or an explicit remove_logo with no replacement).
+    if (oldLogoUrlToDelete) {
       try {
-        await deleteUploadedFile(existing.logo_url);
+        await deleteUploadedFile(oldLogoUrlToDelete);
       } catch (cleanupError) {
-        // Best-effort: the new logo is live; the old one becoming an orphan is non-fatal.
+        // Best-effort: the DB is already updated; the old one becoming an orphan is non-fatal.
         console.error('Failed to delete previous sponsor logo blob:', cleanupError);
       }
     }
