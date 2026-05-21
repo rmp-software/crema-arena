@@ -5,6 +5,12 @@ import { CADENCE_FROZEN_MS } from '@/lib/data-cadence';
 
 interface SponsorBlockProps {
   eventId: string;
+  /**
+   * Current event status. When `finished`, the block relabels its heading to
+   * `Premiação patrocinada por` (the podium credit copy) so the finished
+   * companion gets the credit without a second block. Anything else → `Apoio`.
+   */
+  eventStatus?: string;
 }
 
 interface SponsorEntry {
@@ -44,7 +50,7 @@ const sponsorsFetcher = async (url: string): Promise<SponsorEntry[]> => {
  * the page. Logos shown as-is; no-logo sponsor falls back to its name in
  * `--font-display`. A sponsor with a `website` wraps in an external link.
  */
-export default function SponsorBlock({ eventId }: SponsorBlockProps) {
+export default function SponsorBlock({ eventId, eventStatus }: SponsorBlockProps) {
   const { data } = useSWR<SponsorEntry[]>(
     `/api/events/${eventId}/sponsors`,
     sponsorsFetcher,
@@ -54,13 +60,22 @@ export default function SponsorBlock({ eventId }: SponsorBlockProps) {
   const sponsors = data ?? [];
   if (sponsors.length === 0) return null;
 
+  const isFinished = eventStatus === 'finished';
+  const heading = isFinished ? 'Premiação patrocinada por' : 'Apoio';
+  // Heading style is status-aware. Running → small mono caps label ("Apoio").
+  // Finished → sentence-case credit mirroring the TV podium's font-display line
+  // (CLAUDE.md: sentence case for headings; only the running label is mono caps).
+  const headingClassName = isFinished
+    ? 'text-center text-sm font-[family-name:var(--font-display)] text-[var(--fg-3)] mb-4'
+    : 'text-center text-[10px] tracking-[0.22em] uppercase font-[family-name:var(--font-mono)] text-[var(--fg-3)] mb-4';
+
   return (
     <section
       aria-label="Patrocinadores"
       className="border-t border-[var(--border)] px-4 py-6 mt-2"
     >
-      <h2 className="text-center text-[10px] tracking-[0.22em] uppercase font-[family-name:var(--font-mono)] text-[var(--fg-3)] mb-4">
-        Apoio
+      <h2 className={headingClassName}>
+        {heading}
       </h2>
       <div className="flex flex-wrap items-center justify-center gap-3">
         {sponsors.map((entry) => {

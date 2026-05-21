@@ -279,8 +279,9 @@ export default function LiveCompanion({ eventId }: LiveCompanionProps) {
 
         {/* Sponsor credit ("Apoio") — rendered once below the active tab content
             so it appears on every tab. Frozen-tier (15s) poll on its own SWR
-            key; hides itself when there are no sponsors. */}
-        <SponsorBlock eventId={eventId} />
+            key; hides itself when there are no sponsors. On finished events the
+            heading relabels to "Premiação patrocinada por". */}
+        <SponsorBlock eventId={eventId} eventStatus={event.status} />
       </main>
     </div>
   );
