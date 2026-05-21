@@ -183,16 +183,15 @@ Below the existing competitors block:
 
 Layout constraints — the live feed renders on screens from **1920×1080 up to 4K (3840×2160)** at a fixed **16:9** aspect ratio. Use viewport-relative sizing throughout (`vh` / `vw` / proportional flex), not pixel hardcodes. The whole page should look proportionally identical at any 16:9 viewport above the 1920×1080 minimum.
 
-- Strip height: `~5vh` (≈54px at 1080p, ≈108px at 2160p)
-- Background: `--bg-2` (latte tone), no gradient
-- Logos rendered as **monochrome silhouettes** in `--fg-3` (muted ink) for chrome cohesion — TV is unattended, original color isn't needed
-- Label on far left in mono caps using `--font-mono`: `APOIO`
-- Layout adapts to sponsor count:
-  - 1 sponsor → centered, max logo height ~70% of strip
-  - 2–4 sponsors → evenly spaced
-  - 5+ → rotating windows of 4 logos, ~5s per window, crossfade transition
-- Max logo width per slot: `~12vw`; max logo height: `~70%` of strip height
-- No hover state (unattended)
+**Locked treatment (validated via prototype `against real logos`):** the live display is **dark espresso** (`--espresso-900`), so the earlier "cream strip / muted-ink logo" idea is wrong — it would be a glaring bright bar, and real logos (dark-on-transparent, solid-bg, white-ink) either vanish or clash. Instead:
+
+- **Dark hairline band:** full-width bottom strip, `~5vh` (≈54px@1080p / ≈108px@2160p). Background = subtle `linear-gradient(to top, rgba(0,0,0,.35), transparent)` + 1px top border `rgba(220,197,158,.14)`. NOT a cream fill.
+- **`APOIO` label** far left, `--font-mono`, letter-spaced caps, muted cream (`--crema-300`).
+- **Cream chips for logos (the key decision):** every logo sits inside a cream rounded card — fill `--surface-raised` (#FFFCF3) or `--crema-50`, `--radius-sm` (≈ proportional), `object-fit: contain`, uniform height (~`40px`@1080p inside a ~`60px` chip). This normalizes ANY logo regardless of its own color / transparency / aspect, and visually rhymes with the cream QR card already on the stage. Logos are NOT recolored/grayscaled — shown as-is inside the chip.
+- **No-logo sponsor:** render the sponsor name (`--font-display`) as text inside the same cream chip.
+- **Right clearance:** the strip right-pads to clear the fixed bottom-right QR card (~`460px`@1080p, proportional) so chips never slide under the QR.
+- Layout adapts to count: 1 → left-aligned after label; 2–4 → even gaps; 5+ → rotating windows of ~4 chips, ~5s per window, crossfade.
+- Max chip width per slot `~12vw`. No hover (unattended).
 
 Verify in browser at both `1920×1080` and `3840×2160` via Playwright `setViewportSize`.
 
@@ -202,13 +201,14 @@ Verify in browser at both `1920×1080` and `3840×2160` via Playwright `setViewp
 
 - Single sponsor block at the **bottom** of every tab (Ao vivo / Chave / Leaderboard)
 - Heading: `Apoio` (small, mono caps, `--fg-3`)
-- Logos in a centered row (wrap on overflow), original color, max 56px tall
-- If a sponsor has a `website` set: wrap the logo in `<a href={website} target="_blank" rel="noopener noreferrer">` (opens in new tab). Most sponsors won't have one set; in that case the logo is non-interactive. No standalone URL text either way.
+- **Same cream-chip language as the TV** — each logo in a cream chip (`--surface-raised` fill, `--radius-sm`, `object-fit: contain`, max ~56px tall), centered row, wrap on overflow. Because the companion is a light/cream surface, give each chip a 1px `--border` hairline so it separates from the page. No-logo sponsor → name text in the chip.
+- If a sponsor has a `website` set: wrap the chip in `<a href={website} target="_blank" rel="noopener noreferrer">` (opens in new tab). Most won't have one; then the chip is non-interactive. No standalone URL text either way.
 
 ### Podium / finished state
 
-- TV podium screen: under the trophy, add a single line `Premiação patrocinada por` followed by sponsor logos (monochrome, smaller)
-- Audience finished view: same treatment in the companion's finished tab
+- TV podium screen (dark espresso): under the trophy, a single line `Premiação patrocinada por` (`--font-display`) followed by sponsor logos in **cream chips** (same language as the strip, smaller — ~`32px` logo). Centered.
+- Audience finished view (light): same `Premiação patrocinada por` line + cream chips with the hairline border.
+- If no sponsors attached, hide the credit line entirely.
 
 ## Acceptance criteria
 
