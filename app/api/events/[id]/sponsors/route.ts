@@ -3,6 +3,10 @@ import { getServerSession } from 'next-auth';
 import { Prisma } from '@prisma/client';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { CADENCE_FROZEN_MS } from '@/lib/data-cadence';
+
+// Frozen-tier endpoint: cache for CADENCE_FROZEN_MS at edge + browser.
+const FROZEN_S = CADENCE_FROZEN_MS / 1000;
 
 // GET /api/events/[id]/sponsors - List event's sponsors ordered by position
 // Public, unauthenticated: this is the frozen-tier endpoint polled (~15s) by the
@@ -43,7 +47,11 @@ export async function GET(
         sponsor: es.sponsor,
         position: es.position,
       })),
-      { headers: { 'Cache-Control': 'public, max-age=15, s-maxage=15' } }
+      {
+        headers: {
+          'Cache-Control': `public, max-age=${FROZEN_S}, s-maxage=${FROZEN_S}`,
+        },
+      }
     );
   } catch (error: any) {
     console.error('Error fetching event sponsors:', error);
