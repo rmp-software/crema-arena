@@ -7,6 +7,7 @@ import Badge from '@/app/components/Badge';
 import Modal from '@/app/components/Modal';
 import ConfirmationModal from '@/app/components/ConfirmationModal';
 import CompetitorPoolList from '@/app/components/CompetitorPoolList';
+import EventSponsorsSection from '@/app/components/EventSponsorsSection';
 import SeedInput from '@/app/components/SeedInput';
 import RunningTopBar from '@/app/components/RunningTopBar';
 import EventStatStrip from '@/app/components/EventStatStrip';
@@ -835,6 +836,9 @@ export default function EventDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Event Sponsors Section */}
+      <EventSponsorsSection eventId={eventId} canModify={canModify} />
 
       {/* Add Competitor Modal */}
       <Modal
