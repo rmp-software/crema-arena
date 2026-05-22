@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import SponsorStrip from './SponsorStrip';
+import { CADENCE_FROZEN_MS } from '@/lib/data-cadence';
 
 interface Competitor {
   id: string;
@@ -87,12 +88,35 @@ interface LeaderboardData {
   isComplete: boolean;
 }
 
+interface SponsorEntry {
+  id: string;
+  sponsor: {
+    id: string;
+    name: string;
+    logo_url: string | null;
+    website: string | null;
+  };
+  position: number;
+}
+
 interface LiveDisplayProps {
   eventId: string;
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.ok ? r.json() : Promise.reject(new Error('Failed to fetch event data')));
 const tolerantFetcher = (url: string) => fetch(url).then((r) => (r.ok ? r.json() : null));
+// Sponsors live on the frozen tier; a failed poll must never break the podium,
+// so resolve to an empty list (credit simply hides) instead of throwing.
+const sponsorsFetcher = async (url: string): Promise<SponsorEntry[]> => {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+};
 
 export default function LiveDisplay({ eventId }: LiveDisplayProps) {
   // Split-cadence polling: the current-duel payload is small and the hottest
@@ -103,6 +127,13 @@ export default function LiveDisplay({ eventId }: LiveDisplayProps) {
   const { data, error } = useSWR<CurrentDuelData>(`/api/events/${eventId}/current-duel`, fetcher, fastOpts);
   const { data: bracketData } = useSWR<BracketData>(`/api/events/${eventId}/bracket`, fetcher, slowOpts);
   const { data: leaderboard } = useSWR<LeaderboardData>(`/api/events/${eventId}/leaderboard`, tolerantFetcher, slowOpts);
+  // Sponsors on the frozen tier (15s). Used only by the finished podium credit;
+  // the running views carry their own strip (RMP-113, separate branch).
+  const { data: sponsorsData } = useSWR<SponsorEntry[]>(
+    `/api/events/${eventId}/sponsors`,
+    sponsorsFetcher,
+    { refreshInterval: CADENCE_FROZEN_MS, revalidateOnFocus: false }
+  );
   const loading = !data && !error;
 
   if (loading) {
@@ -219,6 +250,10 @@ export default function LiveDisplay({ eventId }: LiveDisplayProps) {
             </div>
           </div>
         )}
+
+        {/* Sponsor credit — quiet line under the podium row; cream chips. Hidden
+            entirely when there are no sponsors so the podium isn't obscured. */}
+        <PodiumSponsorCredit sponsors={sponsorsData ?? []} />
       </div>
     );
   }
@@ -665,6 +700,53 @@ function MiniCompetitorRow({ entry, isWinner }: { entry: Entry | null; isWinner:
         </span>
       </div>
     </div>
+  );
+}
+
+/**
+ * Podium sponsor credit (TV finished state). Renders a single quiet line
+ * `Premiação patrocinada por` (--font-display, --crema-200) followed by sponsor
+ * logos in cream chips — smaller than the running-view strip (~32px logo). The
+ * chips reuse the cream-card language (`--surface-raised`, `--radius-sm`,
+ * `object-fit: contain`) so any logo normalizes against the dark espresso bg.
+ * No-logo sponsor falls back to its name in --font-display inside the chip.
+ * Hidden entirely when there are no sponsors.
+ */
+function PodiumSponsorCredit({ sponsors }: { sponsors: SponsorEntry[] }) {
+  if (sponsors.length === 0) return null;
+
+  return (
+    <section
+      aria-label="Patrocinadores"
+      className="mt-10 md:mt-14 flex flex-col items-center w-full"
+    >
+      <p className="font-display text-sm md:text-base lg:text-lg text-[var(--crema-200)] text-center">
+        Premiação patrocinada por
+      </p>
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-3 md:gap-4 max-w-5xl">
+        {sponsors.map((entry) => {
+          const { sponsor } = entry;
+          return (
+            <div
+              key={entry.id}
+              className="flex items-center justify-center h-12 md:h-14 px-3 md:px-4 bg-[var(--surface-raised)] rounded-[var(--radius-sm)] shadow-[var(--shadow-1)]"
+            >
+              {sponsor.logo_url ? (
+                <img
+                  src={sponsor.logo_url}
+                  alt={sponsor.name}
+                  className="max-h-[28px] md:max-h-[32px] w-auto max-w-[140px] object-contain"
+                />
+              ) : (
+                <span className="font-display font-bold text-sm md:text-base text-[var(--espresso-900)] whitespace-nowrap">
+                  {sponsor.name}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
