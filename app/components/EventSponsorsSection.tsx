@@ -46,9 +46,11 @@ export default function EventSponsorsSection({ eventId, canModify }: EventSponso
   // Ids selected in the picker that should be re-selected after a partial-failure add.
   const [retrySelection, setRetrySelection] = useState<string[]>([]);
 
-  // Drag state — the id of the row being dragged.
+  // Drag state — the id of the row being dragged, plus the row the cursor is
+  // over and which side of it (so we can draw the insertion line in the gap).
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [dragOverPos, setDragOverPos] = useState<'before' | 'after' | null>(null);
 
   const fetchSponsors = useCallback(async () => {
     setIsLoading(true);
@@ -77,49 +79,31 @@ export default function EventSponsorsSection({ eventId, canModify }: EventSponso
   const attachedSponsorIds = sponsors.map((es) => es.sponsor.id);
 
   const handleAdd = async (sponsorIds: string[]) => {
-    // Attach each selected sponsor sequentially so positions land in selection order.
-    const failedIds: string[] = [];
-    for (const sponsorId of sponsorIds) {
-      try {
-        const response = await fetch(`/api/events/${eventId}/sponsors`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sponsor_id: sponsorId }),
-        });
-        if (!response.ok) {
-          throw new Error();
-        }
-      } catch {
-        failedIds.push(sponsorId);
+    // One bulk request — positions land in selection order on the server, and the
+    // write is atomic, so there's no partial-success state to reconcile here.
+    try {
+      const response = await fetch(`/api/events/${eventId}/sponsors/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sponsor_ids: sponsorIds }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || data.error || 'Falha ao adicionar patrocinadores');
       }
-    }
-
-    // Always refresh so successfully-attached sponsors show up regardless of failures.
-    await fetchSponsors();
-
-    if (failedIds.length === 0) {
-      // Full success: success toast (pluralized) then close.
+      await fetchSponsors();
       const count = sponsorIds.length;
       showToast(
-        count === 1
-          ? '1 patrocinador adicionado.'
-          : `${count} patrocinadores adicionados.`,
+        count === 1 ? '1 patrocinador adicionado.' : `${count} patrocinadores adicionados.`,
         'success'
       );
       setRetrySelection([]);
       setAddModal(false);
-      return;
+    } catch (err: any) {
+      // Nothing was attached (atomic) — keep the picks selected for a retry.
+      setRetrySelection(sponsorIds);
+      showToast(err.message || 'Falha ao adicionar patrocinadores', 'error');
     }
-
-    // Partial (or full) failure: keep the modal open, re-select the failed ids,
-    // and surface how many failed.
-    setRetrySelection(failedIds);
-    showToast(
-      failedIds.length === 1
-        ? '1 patrocinador não pôde ser adicionado.'
-        : `${failedIds.length} patrocinadores não puderam ser adicionados.`,
-      'error'
-    );
   };
 
   const handleRemove = async () => {
@@ -167,17 +151,24 @@ export default function EventSponsorsSection({ eventId, canModify }: EventSponso
     }
   };
 
-  const handleDrop = (targetId: string, dataTransferId?: string) => {
+  const handleDrop = (targetId: string, pos: 'before' | 'after', dataTransferId?: string) => {
     setDragOverId(null);
+    setDragOverPos(null);
     // Prefer the id carried on the drag event's dataTransfer (always available at
     // drop time); fall back to React state for browsers that strip the payload.
     const sourceId = dataTransferId || draggingId;
     setDraggingId(null);
-    if (!sourceId || sourceId === targetId) return;
+    if (!sourceId) return;
 
     const fromIndex = sponsors.findIndex((es) => es.id === sourceId);
-    const toIndex = sponsors.findIndex((es) => es.id === targetId);
+    let toIndex = sponsors.findIndex((es) => es.id === targetId);
     if (fromIndex === -1 || toIndex === -1) return;
+
+    // Land the row on the side of the target the cursor was nearest...
+    if (pos === 'after') toIndex += 1;
+    // ...then account for removing the source first shifting later rows down.
+    if (fromIndex < toIndex) toIndex -= 1;
+    if (fromIndex === toIndex) return; // dropped back into its own slot
 
     const reordered = [...sponsors];
     const [moved] = reordered.splice(fromIndex, 1);
@@ -241,26 +232,45 @@ export default function EventSponsorsSection({ eventId, canModify }: EventSponso
               onDragEnd={() => {
                 setDraggingId(null);
                 setDragOverId(null);
+                setDragOverPos(null);
               }}
               onDragOver={(e) => {
                 if (!canModify) return;
                 e.preventDefault();
-                if (dragOverId !== es.id) setDragOverId(es.id);
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pos = e.clientY > rect.top + rect.height / 2 ? 'after' : 'before';
+                if (dragOverId !== es.id || dragOverPos !== pos) {
+                  setDragOverId(es.id);
+                  setDragOverPos(pos);
+                }
               }}
               onDragLeave={() => {
-                if (dragOverId === es.id) setDragOverId(null);
+                if (dragOverId === es.id) {
+                  setDragOverId(null);
+                  setDragOverPos(null);
+                }
               }}
               onDrop={(e) => {
                 if (!canModify) return;
                 e.preventDefault();
-                handleDrop(es.id, e.dataTransfer.getData('text/plain') || undefined);
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pos = e.clientY > rect.top + rect.height / 2 ? 'after' : 'before';
+                handleDrop(es.id, pos, e.dataTransfer.getData('text/plain') || undefined);
               }}
-              className={`flex items-center gap-4 p-4 bg-[var(--surface)] rounded-[var(--radius-md)] border transition-colors ${
-                dragOverId === es.id && draggingId !== es.id
-                  ? 'border-[var(--brand)]'
-                  : 'border-[var(--border)]'
-              } ${draggingId === es.id ? 'opacity-50' : ''}`}
+              className={`relative flex items-center gap-4 p-4 bg-[var(--surface)] rounded-[var(--radius-md)] border border-[var(--border)] transition-colors ${
+                draggingId === es.id ? 'opacity-50' : ''
+              }`}
             >
+              {/* Insertion line — sits in the gap to show exactly where the row lands */}
+              {canModify && dragOverId === es.id && draggingId !== es.id && (
+                <span
+                  aria-hidden
+                  className={`pointer-events-none absolute left-0 right-0 h-[2px] rounded-full bg-[var(--brand)] ${
+                    dragOverPos === 'after' ? '-bottom-[7px]' : '-top-[7px]'
+                  }`}
+                />
+              )}
+
               {/* Drag handle (setup only) */}
               {canModify && (
                 <span

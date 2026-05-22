@@ -8,7 +8,7 @@ interface SponsorBlockProps {
   eventId: string;
   /**
    * Current event status. When `finished`, the block relabels its heading to
-   * `Premiação patrocinada por` (the podium credit copy) so the finished
+   * `Patrocinado por` (the podium credit copy) so the finished
    * companion gets the credit without a second block. Anything else → `Apoio`.
    */
   eventStatus?: string;
@@ -62,7 +62,7 @@ export default function SponsorBlock({ eventId, eventStatus }: SponsorBlockProps
   if (sponsors.length === 0) return null;
 
   const isFinished = eventStatus === 'finished';
-  const heading = isFinished ? 'Premiação patrocinada por' : 'Apoio';
+  const heading = isFinished ? 'Patrocinado por' : 'Apoio';
   // Heading style is status-aware. Running → small mono caps label ("Apoio").
   // Finished → sentence-case credit mirroring the TV podium's font-display line
   // (CLAUDE.md: sentence case for headings; only the running label is mono caps).

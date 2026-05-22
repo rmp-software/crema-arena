@@ -706,7 +706,7 @@ function MiniCompetitorRow({ entry, isWinner }: { entry: Entry | null; isWinner:
 
 /**
  * Podium sponsor credit (TV finished state). Renders a single quiet line
- * `Premiação patrocinada por` (--font-display, --crema-200) followed by sponsor
+ * `Patrocinado por` (--font-display, --crema-200) followed by sponsor
  * logos in cream chips — smaller than the running-view strip (~32px logo). The
  * chips reuse the cream-card language (`--surface-raised`, `--radius-sm`,
  * `object-fit: contain`) so any logo normalizes against the dark espresso bg.
@@ -722,7 +722,7 @@ function PodiumSponsorCredit({ sponsors }: { sponsors: SponsorEntry[] }) {
       className="mt-10 md:mt-14 flex flex-col items-center w-full"
     >
       <p className="font-display text-sm md:text-base lg:text-lg text-[var(--crema-200)] text-center">
-        Premiação patrocinada por
+        Patrocinado por
       </p>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-3 md:gap-4 max-w-5xl">
         {sponsors.map((entry) => (
@@ -777,14 +777,6 @@ function PodiumSlot({
           alt={entry.competitor.name}
           className="w-full h-full object-cover"
         />
-        {isFirst && (
-          <img
-            src="/assets/trophy.svg"
-            alt=""
-            aria-hidden
-            className="absolute -bottom-2 -right-2 w-12 h-12 bg-[var(--marigold-500)] rounded-full p-1.5 shadow-[var(--shadow-1)]"
-          />
-        )}
       </div>
       <p
         className={`${isFirst ? 'text-xl md:text-2xl' : 'text-base md:text-lg'} font-display font-bold text-center text-[var(--crema-50)]`}
