@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import SponsorStrip from './SponsorStrip';
+import SponsorChip from './SponsorChip';
 import { CADENCE_FROZEN_MS } from '@/lib/data-cadence';
 
 interface Competitor {
@@ -724,27 +725,9 @@ function PodiumSponsorCredit({ sponsors }: { sponsors: SponsorEntry[] }) {
         Premiação patrocinada por
       </p>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-3 md:gap-4 max-w-5xl">
-        {sponsors.map((entry) => {
-          const { sponsor } = entry;
-          return (
-            <div
-              key={entry.id}
-              className="flex items-center justify-center h-12 md:h-14 px-3 md:px-4 bg-[var(--surface-raised)] rounded-[var(--radius-sm)] shadow-[var(--shadow-1)]"
-            >
-              {sponsor.logo_url ? (
-                <img
-                  src={sponsor.logo_url}
-                  alt={sponsor.name}
-                  className="max-h-[28px] md:max-h-[32px] w-auto max-w-[140px] object-contain"
-                />
-              ) : (
-                <span className="font-display font-bold text-sm md:text-base text-[var(--espresso-900)] whitespace-nowrap">
-                  {sponsor.name}
-                </span>
-              )}
-            </div>
-          );
-        })}
+        {sponsors.map((entry) => (
+          <SponsorChip key={entry.id} sponsor={entry.sponsor} size="podium" />
+        ))}
       </div>
     </section>
   );

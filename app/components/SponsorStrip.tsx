@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { CADENCE_FROZEN_MS } from '@/lib/data-cadence';
+import SponsorChip from './SponsorChip';
 
 interface Sponsor {
   id: string;
@@ -126,48 +127,9 @@ export default function SponsorStrip({ eventId }: SponsorStripProps) {
         }}
       >
         {current.map((es) => (
-          <SponsorChip key={es.id} sponsor={es.sponsor} />
+          <SponsorChip key={es.id} sponsor={es.sponsor} size="strip" />
         ))}
       </div>
-    </div>
-  );
-}
-
-function SponsorChip({ sponsor }: { sponsor: Sponsor }) {
-  return (
-    <div
-      className="flex items-center justify-center flex-shrink-0 bg-[var(--surface-raised)] rounded-[var(--radius-sm)]"
-      style={{
-        // Chip ~44px tall @1080p (4.1vh), sitting within the ~54px (5vh) band;
-        // padding + max-width scale with the viewport too.
-        height: '4.1vh',
-        paddingLeft: '1vw',
-        paddingRight: '1vw',
-        maxWidth: '12vw',
-        boxShadow: '0 0.2vh 1vh -0.4vh rgba(0,0,0,.5)',
-      }}
-    >
-      {sponsor.logo_url ? (
-        <img
-          src={sponsor.logo_url}
-          alt={sponsor.name}
-          style={{
-            // Logo ~30px inside the ~44px chip @1080p — shown as-is, no grayscale.
-            height: '2.8vh',
-            width: 'auto',
-            maxWidth: '10vw',
-            objectFit: 'contain',
-            display: 'block',
-          }}
-        />
-      ) : (
-        <span
-          className="font-display font-semibold text-[var(--espresso-900)] truncate"
-          style={{ fontSize: '1.7vh', maxWidth: '10vw' }}
-        >
-          {sponsor.name}
-        </span>
-      )}
     </div>
   );
 }

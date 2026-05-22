@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import { CADENCE_FROZEN_MS } from '@/lib/data-cadence';
+import SponsorChip from './SponsorChip';
 
 interface SponsorBlockProps {
   eventId: string;
@@ -80,21 +81,7 @@ export default function SponsorBlock({ eventId, eventStatus }: SponsorBlockProps
       <div className="flex flex-wrap items-center justify-center gap-3">
         {sponsors.map((entry) => {
           const { sponsor } = entry;
-          const chip = (
-            <div className="flex items-center justify-center h-14 px-4 bg-[var(--surface-raised)] border border-[var(--border)] rounded-[var(--radius-sm)]">
-              {sponsor.logo_url ? (
-                <img
-                  src={sponsor.logo_url}
-                  alt={sponsor.name}
-                  className="max-h-[56px] w-auto max-w-[160px] object-contain"
-                />
-              ) : (
-                <span className="font-[family-name:var(--font-display)] font-bold text-sm text-[var(--fg-2)] whitespace-nowrap">
-                  {sponsor.name}
-                </span>
-              )}
-            </div>
-          );
+          const chip = <SponsorChip sponsor={sponsor} size="companion" bordered />;
 
           if (sponsor.website) {
             return (
