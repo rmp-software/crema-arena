@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
+import SponsorStrip from './SponsorStrip';
 
 interface Competitor {
   id: string;
@@ -279,6 +280,9 @@ export default function LiveDisplay({ eventId }: LiveDisplayProps) {
           )}
         </main>
 
+        {/* Sponsor strip — full-width hairline band at the bottom */}
+        <SponsorStrip eventId={eventId} />
+
         {/* QR — bottom-right (fixed to viewport) */}
         <QrBadge eventId={eventId} />
       </div>
@@ -326,6 +330,7 @@ export default function LiveDisplay({ eventId }: LiveDisplayProps) {
           )}
         </main>
 
+        <SponsorStrip eventId={eventId} />
         <QrBadge eventId={eventId} />
       </div>
     );
@@ -348,6 +353,7 @@ export default function LiveDisplay({ eventId }: LiveDisplayProps) {
           Aguardando próximo duelo...
         </p>
       </main>
+      <SponsorStrip eventId={eventId} />
       <QrBadge eventId={eventId} />
     </div>
   );
