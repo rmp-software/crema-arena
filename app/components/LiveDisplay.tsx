@@ -87,10 +87,19 @@ interface LeaderboardEntry {
   position: number;
 }
 
+interface CrowdFavorite {
+  competitor: Competitor;
+  crowdWins: number;
+  crowdVotes: number;
+}
+
 interface LeaderboardData {
   event: { id: string; name: string; status: string };
   leaderboard: LeaderboardEntry[];
   isComplete: boolean;
+  // Non-null only when the event is finished, crowd vote was enabled, and at
+  // least one crowd vote was cast all event (computed server-side).
+  crowdFavorite: CrowdFavorite | null;
 }
 
 interface SponsorEntry {
@@ -256,6 +265,10 @@ export default function LiveDisplay({ eventId }: LiveDisplayProps) {
           </div>
         )}
 
+        {/* Crowd favorite — tasteful one-line credit under the podium, styled
+            like the sponsor credit. Hidden when null (disabled / no votes). */}
+        <PodiumCrowdFavorite favorite={leaderboard?.crowdFavorite ?? null} />
+
         {/* Sponsor credit — quiet line under the podium row; cream chips. Hidden
             entirely when there are no sponsors so the podium isn't obscured. */}
         <PodiumSponsorCredit sponsors={sponsorsData ?? []} />
@@ -308,6 +321,16 @@ export default function LiveDisplay({ eventId }: LiveDisplayProps) {
               entryB={currentDuel.entryB}
               votesA={currentDuel.votesA}
               votesB={currentDuel.votesB}
+            />
+          )}
+
+          {/* Unofficial crowd-lean bar — secondary to the official N × M.
+              Gated on the per-event toggle and hidden when no crowd votes
+              exist (no empty chrome). */}
+          {event.crowdVoteEnabled && (
+            <CrowdLeanBar
+              a={currentDuel.crowdVotesA ?? 0}
+              b={currentDuel.crowdVotesB ?? 0}
             />
           )}
 
@@ -526,6 +549,79 @@ function CentralScore({ a, b }: { a: number; b: number }) {
   );
 }
 
+/**
+ * Unofficial crowd-lean bar (TV active duel). A slim horizontal bar showing the
+ * crowd's A-vs-B share — deliberately SECONDARY to the official `N × M` score.
+ *
+ * Sizing is in 1080p stage-space px (like SponsorStrip): LiveStage's
+ * `transform: scale()` grows it proportionally from 1920×1080 to 4K, so the
+ * spec's "~30vw × ~0.8vh" maps to 576×9 px in stage-space (0.30·1920, 0.008·1080).
+ * Do NOT use vw/vh here — they'd double-scale against the stage transform.
+ *
+ * Hidden entirely when the duel has zero crowd votes (no empty chrome). The
+ * caller already gates the whole bar on `event.crowdVoteEnabled`.
+ */
+function CrowdLeanBar({ a, b }: { a: number; b: number }) {
+  const total = a + b;
+  if (total === 0) return null;
+
+  const pctA = Math.round((a / total) * 100);
+  const pctB = 100 - pctA;
+
+  return (
+    <div
+      className="flex items-center flex-shrink-0"
+      style={{ gap: 14, marginTop: 4 }}
+      aria-label={`Voto do público: ${pctA}% a ${pctB}%`}
+    >
+      {/* Mono caps label — muted cream, set like AO VIVO / APOIO */}
+      <span
+        className="font-mono uppercase text-[var(--crema-300)] flex-shrink-0"
+        style={{ fontSize: 11, letterSpacing: '0.28em', opacity: 0.85 }}
+      >
+        Público
+      </span>
+
+      {/* A-side percentage (muted) */}
+      <span
+        className="font-mono tabular-nums text-[var(--crema-300)] flex-shrink-0"
+        style={{ fontSize: 11, opacity: 0.7, minWidth: 30, textAlign: 'right' }}
+      >
+        {pctA}%
+      </span>
+
+      {/* The lean bar itself — espresso surface track, gold A-share fill */}
+      <div
+        className="overflow-hidden flex-shrink-0"
+        style={{
+          width: 576,
+          height: 9,
+          borderRadius: 9,
+          backgroundColor: 'var(--espresso-700)',
+          border: '1px solid rgba(220,197,158,.14)',
+        }}
+      >
+        <div
+          style={{
+            width: `${pctA}%`,
+            height: '100%',
+            backgroundColor: 'var(--gold)',
+            transition: 'width 600ms ease',
+          }}
+        />
+      </div>
+
+      {/* B-side percentage (muted) */}
+      <span
+        className="font-mono tabular-nums text-[var(--crema-300)] flex-shrink-0"
+        style={{ fontSize: 11, opacity: 0.7, minWidth: 30, textAlign: 'left' }}
+      >
+        {pctB}%
+      </span>
+    </div>
+  );
+}
+
 function PourPhotoCenterpiece({
   pourPhotoUrl,
   entryA,
@@ -726,6 +822,31 @@ function MiniCompetitorRow({ entry, isWinner }: { entry: Entry | null; isWinner:
  * No-logo sponsor falls back to its name in --font-display inside the chip.
  * Hidden entirely when there are no sponsors.
  */
+/**
+ * Crowd favorite credit (TV finished state). One tasteful line —
+ * `Favorito do público` (quiet mono-ish label) + the competitor's name in the
+ * display font — styled like the sponsor `Patrocinado por` credit. Deliberately
+ * just the line, not a full card (the companion carries the rich version).
+ * Hidden entirely when there's no crowd favorite.
+ */
+function PodiumCrowdFavorite({ favorite }: { favorite: CrowdFavorite | null }) {
+  if (!favorite) return null;
+
+  return (
+    <section
+      aria-label="Favorito do público"
+      className="mt-8 md:mt-10 flex flex-col items-center w-full"
+    >
+      <p className="font-display text-sm md:text-base lg:text-lg text-[var(--crema-200)] text-center">
+        Favorito do público
+      </p>
+      <p className="mt-1 font-display font-bold text-2xl md:text-3xl text-[var(--marigold-500)] text-center text-balance">
+        {favorite.competitor.name}
+      </p>
+    </section>
+  );
+}
+
 function PodiumSponsorCredit({ sponsors }: { sponsors: SponsorEntry[] }) {
   if (sponsors.length === 0) return null;
 
