@@ -155,6 +155,7 @@ export async function GET(
           }
         : null,
       judgesCount: event.judges_count,
+      crowdVoteEnabled: event.crowd_vote_enabled,
       duels: currentRoundDuels.map((duel) => ({
         id: duel.id,
         round: duel.round,

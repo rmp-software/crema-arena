@@ -27,6 +27,7 @@ export async function GET(
         date: true,
         location: true,
         judges_count: true,
+        crowd_vote_enabled: true,
       },
     });
 
@@ -44,6 +45,7 @@ export async function GET(
           date: event.date.toISOString(),
           location: event.location,
           judgesCount: event.judges_count,
+          crowdVoteEnabled: event.crowd_vote_enabled,
         },
         currentDuel: null,
         currentRound: null,
@@ -143,6 +145,7 @@ export async function GET(
         date: event.date.toISOString(),
         location: event.location,
         judgesCount: event.judges_count,
+        crowdVoteEnabled: event.crowd_vote_enabled,
       },
       currentDuel: activeDuel
         ? {
