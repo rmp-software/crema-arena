@@ -7,6 +7,7 @@ import ChaveTab from './tabs/ChaveTab';
 import LeaderboardTab from './tabs/LeaderboardTab';
 import Badge from './Badge';
 import SponsorBlock from './SponsorBlock';
+import type { CrowdFavorite } from '@/lib/crowd-vote';
 
 interface LiveCompanionProps {
   eventId: string;
@@ -42,6 +43,7 @@ interface LeaderboardData {
   event: any;
   leaderboard: any[];
   isComplete: boolean;
+  crowdFavorite: CrowdFavorite | null;
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.ok ? r.json() : Promise.reject(new Error('Failed to fetch event data')));
@@ -274,6 +276,7 @@ export default function LiveCompanion({ eventId }: LiveCompanionProps) {
               event={leaderboardData.event}
               leaderboard={leaderboardData.leaderboard}
               isComplete={leaderboardData.isComplete}
+              crowdFavorite={leaderboardData.crowdFavorite ?? null}
             />
           )}
         </div>
