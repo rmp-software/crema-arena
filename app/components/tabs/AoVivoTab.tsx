@@ -1,6 +1,7 @@
 'use client';
 
 import Badge from '../Badge';
+import CrowdVoteBar from '../CrowdVoteBar';
 
 interface Competitor {
   id: string;
@@ -36,6 +37,7 @@ interface EventData {
   name: string;
   status: 'setup' | 'running' | 'finished';
   judgesCount: number;
+  crowdVoteEnabled?: boolean;
 }
 
 interface AoVivoTabProps {
@@ -249,6 +251,15 @@ export default function AoVivoTab({
               </p>
             </div>
           </div>
+
+          {/* Crowd vote ballot — unofficial audience vote. Rendered only when
+              crowd vote is enabled for the event and the duel has two entries.
+              When disabled, the photo + judge score above still render. */}
+          {event.crowdVoteEnabled && currentDuel.entryA && currentDuel.entryB && (
+            <div className="mt-4">
+              <CrowdVoteBar duel={currentDuel} />
+            </div>
+          )}
         </div>
       )}
 
