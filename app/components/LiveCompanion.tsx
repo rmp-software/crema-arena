@@ -21,6 +21,7 @@ interface EventData {
   date: string;
   location?: string;
   judgesCount: number;
+  crowdVoteEnabled?: boolean;
 }
 
 interface CurrentDuelData {
