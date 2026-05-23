@@ -1,6 +1,6 @@
 ---
 slug: crowd-vote
-status: draft
+status: planned
 created: 2026-05-22
 linear_project_id: aac21a02-f206-4d19-9284-e852b2c0b43c
 linear_parent_issue: RMP-119
