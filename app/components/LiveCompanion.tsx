@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import AoVivoTab from './tabs/AoVivoTab';
+import AoVivoTab, { type Duel } from './tabs/AoVivoTab';
 import ChaveTab from './tabs/ChaveTab';
 import LeaderboardTab from './tabs/LeaderboardTab';
 import Badge from './Badge';
@@ -25,8 +25,8 @@ interface EventData {
 
 interface CurrentDuelData {
   event: EventData;
-  currentDuel: any;
-  nextDuel: any;
+  currentDuel: Duel | null;
+  nextDuel: Duel | null;
   currentRound: number;
   totalRounds: number;
 }

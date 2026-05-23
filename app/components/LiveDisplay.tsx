@@ -25,6 +25,9 @@ interface Duel {
   status: string;
   votesA: number;
   votesB: number;
+  crowdVotesA?: number;
+  crowdVotesB?: number;
+  photoLeftSlot?: 'a' | 'b';
   pourPhotoUrl: string | null;
   startedAt: string | null;
   isBronzeMatch?: boolean;
@@ -39,6 +42,7 @@ interface Event {
   date: string;
   location: string | null;
   judgesCount: number;
+  crowdVoteEnabled: boolean;
 }
 
 interface CurrentDuelData {
@@ -294,6 +298,7 @@ export default function LiveDisplay({ eventId }: LiveDisplayProps) {
               pourPhotoUrl={currentDuel.pourPhotoUrl!}
               entryA={currentDuel.entryA}
               entryB={currentDuel.entryB}
+              photoLeftSlot={currentDuel.photoLeftSlot}
               votesA={currentDuel.votesA}
               votesB={currentDuel.votesB}
             />
@@ -525,18 +530,26 @@ function PourPhotoCenterpiece({
   pourPhotoUrl,
   entryA,
   entryB,
+  photoLeftSlot,
   votesA,
   votesB,
 }: {
   pourPhotoUrl: string;
   entryA: Entry;
   entryB: Entry;
+  photoLeftSlot?: 'a' | 'b';
   votesA: number;
   votesB: number;
 }) {
   // No text overlay — sits cleanly above a separate competitor-info row so
   // names stay readable regardless of the photo's exposure. Height capped so
   // the TV viewport never scrolls.
+  //
+  // The name captions follow the cup positions in the photo: `photoLeftSlot`
+  // records which entry's cup is on the LEFT, so the left caption must name that
+  // entry. The central score keeps its A × B order regardless.
+  const leftEntry = photoLeftSlot === 'b' ? entryB : entryA;
+  const rightEntry = photoLeftSlot === 'b' ? entryA : entryB;
   return (
     <div className="flex flex-col items-center w-full max-w-5xl gap-4 md:gap-6">
       <div className="rounded-[var(--radius-lg)] overflow-hidden border-4 border-[var(--crema-200)] shadow-[var(--shadow-2)]">
@@ -550,10 +563,10 @@ function PourPhotoCenterpiece({
       <div className="flex items-center justify-center gap-6 md:gap-10 w-full">
         <div className="flex-1 min-w-0 text-right">
           <p className="text-2xl md:text-4xl font-display font-bold text-[var(--crema-50)] truncate">
-            {entryA.competitor.name}
+            {leftEntry.competitor.name}
           </p>
           <p className="text-base md:text-xl font-serif italic text-[var(--crema-200)] truncate">
-            {entryA.competitor.coffeeShop}
+            {leftEntry.competitor.coffeeShop}
           </p>
         </div>
         <div
@@ -565,10 +578,10 @@ function PourPhotoCenterpiece({
         </div>
         <div className="flex-1 min-w-0 text-left">
           <p className="text-2xl md:text-4xl font-display font-bold text-[var(--crema-50)] truncate">
-            {entryB.competitor.name}
+            {rightEntry.competitor.name}
           </p>
           <p className="text-base md:text-xl font-serif italic text-[var(--crema-200)] truncate">
-            {entryB.competitor.coffeeShop}
+            {rightEntry.competitor.coffeeShop}
           </p>
         </div>
       </div>
