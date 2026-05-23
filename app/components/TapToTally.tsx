@@ -550,10 +550,14 @@ export default function TapToTally({ duel, judgesCount, crowdVoteEnabled, onRefr
           )}
         </div>
 
-        {/* Vote buttons — competitor name is the primary label */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
-          {duel.entryA && (
-            <div className="flex flex-col gap-2">
+        {/* Vote buttons — competitor name is the primary label.
+            Each button is fully wired to its OWN cup ('A' votes credit entry A,
+            'B' votes credit entry B). Only their visual left/right ORDER follows
+            photoLeftSlot so the left-positioned button matches the cup on the
+            left of the pour photo. The onClick→cup mapping never changes. */}
+        {(() => {
+          const buttonA = duel.entryA ? (
+            <div key="vote-a" className="flex flex-col gap-2">
               <VoteButton
                 competitor={duel.entryA.competitor}
                 side="A"
@@ -571,9 +575,9 @@ export default function TapToTally({ duel, judgesCount, crowdVoteEnabled, onRefr
                 <span aria-hidden className="text-base leading-none">−</span> Remover voto
               </button>
             </div>
-          )}
-          {duel.entryB && (
-            <div className="flex flex-col gap-2">
+          ) : null;
+          const buttonB = duel.entryB ? (
+            <div key="vote-b" className="flex flex-col gap-2">
               <VoteButton
                 competitor={duel.entryB.competitor}
                 side="B"
@@ -591,8 +595,15 @@ export default function TapToTally({ duel, judgesCount, crowdVoteEnabled, onRefr
                 <span aria-hidden className="text-base leading-none">−</span> Remover voto
               </button>
             </div>
-          )}
-        </div>
+          ) : null;
+          // photoLeftSlot === 'b' → entry B is on the left; otherwise A left (today's order).
+          const ordered = photoLeftSlot === 'b' ? [buttonB, buttonA] : [buttonA, buttonB];
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+              {ordered}
+            </div>
+          );
+        })()}
 
         {/* Complete Duel Button */}
         <div className="pt-6 border-t border-[var(--border)]">
