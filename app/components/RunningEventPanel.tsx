@@ -29,6 +29,7 @@ interface Duel {
   votesA: number;
   votesB: number;
   pourPhotoUrl: string | null;
+  photoLeftSlot?: 'a' | 'b' | null;
   entryA: Entry | null;
   entryB: Entry | null;
   winner?: Entry | null;
@@ -246,7 +247,7 @@ export default function RunningEventPanel({ eventId, onEventFinished }: RunningE
       {/* Active Duel - Tap-to-Tally */}
       {activeDuel && (
         <>
-          <TapToTally duel={activeDuel} judgesCount={judgesCount} onRefresh={fetchRunningData} />
+          <TapToTally duel={activeDuel} judgesCount={judgesCount} crowdVoteEnabled={crowdVoteEnabled} onRefresh={fetchRunningData} />
           {/* Skip-duel control: only meaningful when another pending duel exists in this round */}
           {duels.some(
             (d) =>
