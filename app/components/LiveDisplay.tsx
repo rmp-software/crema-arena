@@ -331,6 +331,7 @@ export default function LiveDisplay({ eventId }: LiveDisplayProps) {
             <CrowdLeanBar
               a={currentDuel.crowdVotesA ?? 0}
               b={currentDuel.crowdVotesB ?? 0}
+              photoLeftSlot={currentDuel.photoLeftSlot}
             />
           )}
 
@@ -561,18 +562,30 @@ function CentralScore({ a, b }: { a: number; b: number }) {
  * Hidden entirely when the duel has zero crowd votes (no empty chrome). The
  * caller already gates the whole bar on `event.crowdVoteEnabled`.
  */
-function CrowdLeanBar({ a, b }: { a: number; b: number }) {
+function CrowdLeanBar({
+  a,
+  b,
+  photoLeftSlot,
+}: {
+  a: number;
+  b: number;
+  photoLeftSlot?: 'a' | 'b';
+}) {
   const total = a + b;
   if (total === 0) return null;
 
-  const pctA = Math.round((a / total) * 100);
-  const pctB = 100 - pctA;
+  // Orient the bar to the photo: the left of the bar is the cup physically on
+  // the left in the photo (entry A unless photoLeftSlot === 'b'), so the lean
+  // reads in the same direction as the competitor names shown above it.
+  const leftCount = photoLeftSlot === 'b' ? b : a;
+  const pctLeft = Math.round((leftCount / total) * 100);
+  const pctRight = 100 - pctLeft;
 
   return (
     <div
       className="flex items-center flex-shrink-0"
       style={{ gap: 14, marginTop: 4 }}
-      aria-label={`Voto do público: ${pctA}% a ${pctB}%`}
+      aria-label={`Voto do público: ${pctLeft}% à esquerda, ${pctRight}% à direita`}
     >
       {/* Mono caps label — muted cream, set like AO VIVO / APOIO */}
       <span
@@ -582,15 +595,15 @@ function CrowdLeanBar({ a, b }: { a: number; b: number }) {
         Público
       </span>
 
-      {/* A-side percentage (muted) */}
+      {/* Left-cup percentage (muted) */}
       <span
         className="font-mono tabular-nums text-[var(--crema-300)] flex-shrink-0"
         style={{ fontSize: 11, opacity: 0.7, minWidth: 30, textAlign: 'right' }}
       >
-        {pctA}%
+        {pctLeft}%
       </span>
 
-      {/* The lean bar itself — espresso surface track, gold A-share fill */}
+      {/* The lean bar itself — espresso track, gold left-cup-share fill */}
       <div
         className="overflow-hidden flex-shrink-0"
         style={{
@@ -603,7 +616,7 @@ function CrowdLeanBar({ a, b }: { a: number; b: number }) {
       >
         <div
           style={{
-            width: `${pctA}%`,
+            width: `${pctLeft}%`,
             height: '100%',
             backgroundColor: 'var(--gold)',
             transition: 'width 600ms ease',
@@ -611,12 +624,12 @@ function CrowdLeanBar({ a, b }: { a: number; b: number }) {
         />
       </div>
 
-      {/* B-side percentage (muted) */}
+      {/* Right-cup percentage (muted) */}
       <span
         className="font-mono tabular-nums text-[var(--crema-300)] flex-shrink-0"
         style={{ fontSize: 11, opacity: 0.7, minWidth: 30, textAlign: 'left' }}
       >
-        {pctB}%
+        {pctRight}%
       </span>
     </div>
   );
