@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+> ⚠️ **Superseded.** Active development moved to the monorepo
+> `rmp-software/crivelo` (this app is now `apps/crema-arena`, cloned at
+> `~/dev/crivelo`). This standalone repo is legacy.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands

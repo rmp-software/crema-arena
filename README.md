@@ -1,5 +1,10 @@
 # Crema Arena
 
+> ## ⚠️ This repository is no longer maintained
+> Development has moved to the **Crivelo monorepo** — [`rmp-software/crivelo`](https://github.com/rmp-software/crivelo),
+> where this app now lives at [`apps/crema-arena`](https://github.com/rmp-software/crivelo/tree/main/apps/crema-arena).
+> Please open issues and PRs there. This standalone repo is kept for history only.
+
 Specialty Coffee Competition Platform - MVP for organizing and broadcasting latte art TNTs, barista championships, and bar battles in Brazil.
 
 ## Technology Stack
